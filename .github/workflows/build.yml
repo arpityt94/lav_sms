@@ -1,0 +1,44 @@
+
+name: Build LAV SMS ZIP
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get source code
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          extensions: mbstring, bcmath, ctype, fileinfo, json, openssl, pdo, pdo_mysql, tokenizer, xml, curl, gd, zip
+          coverage: none
+
+      - name: Install Laravel dependencies
+        run: composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
+
+      - name: Create ZIP package
+        run: |
+          zip -r lav-sms-build.zip . \
+            -x ".git/*" \
+            -x ".github/*" \
+            -x "tests/*" \
+            -x "node_modules/*" \
+            -x ".env" \
+            -x "storage/logs/*"
+
+      - name: Upload ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: lav-sms-build
+          path: lav-sms-build.zip
+          retention-days: 7
+          
